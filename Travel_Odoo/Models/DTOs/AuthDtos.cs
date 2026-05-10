@@ -1,4 +1,4 @@
-namespace Travel_Odoo.Backend.Models.DTOs;
+namespace Travel_Odoo.Models.DTOs;
 
 public record RegisterRequest(
     string FullName,

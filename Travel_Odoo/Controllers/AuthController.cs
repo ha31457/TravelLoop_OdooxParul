@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Travel_Odoo.Backend.Models;
-using Travel_Odoo.Backend.Services;
-using Travel_Odoo.Backend.Models.DTOs;
-using LoginRequest = Travel_Odoo.Backend.Models.DTOs.LoginRequest;
-using RegisterRequest = Travel_Odoo.Backend.Models.DTOs.RegisterRequest;
+using Travel_Odoo.Models;
+using Travel_Odoo.Models.DTOs;
+using Travel_Odoo.Services;
+using LoginRequest = Travel_Odoo.Models.DTOs.LoginRequest;
+using RegisterRequest = Travel_Odoo.Models.DTOs.RegisterRequest;
 
-namespace Travel_Odoo.Backend.Controllers;
+namespace Travel_Odoo.Controllers;
 
 [ApiController]
 [Route("api/{controller}")]
