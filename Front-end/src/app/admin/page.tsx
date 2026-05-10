@@ -72,6 +72,7 @@ export default function AdminDashboard() {
               </div>
               <span className="font-heading text-xl font-bold tracking-widest text-white uppercase">
                 Trave<span className="text-brand-primary">Loop</span>
+                Core<span className="text-brand-primary">OS</span>
               </span>
             </Link>
             
