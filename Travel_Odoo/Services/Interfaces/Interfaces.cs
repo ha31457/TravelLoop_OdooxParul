@@ -2,14 +2,14 @@ using Travel_Odoo.Models.DTOs;
 
 namespace Travel_Odoo.Services.Interfaces;
 
-public interface IAuthService
-    {
-        Task<ApiResponseDto<AuthResponseDto>> RegisterAsync(RegisterRequestDto dto);
-        Task<ApiResponseDto<AuthResponseDto>> LoginAsync(LoginRequestDto dto);
-        Task<ApiResponseDto<string>> ForgotPasswordAsync(ForgotPasswordRequestDto dto);
-        Task<ApiResponseDto<string>> ResetPasswordAsync(ResetPasswordRequestDto dto);
-        Task<ApiResponseDto<string>> ChangePasswordAsync(Guid userId, ChangePasswordRequestDto dto);
-    }
+    // public interface IAuthService
+    // {
+    //     Task<ApiResponseDto<AuthResponseDto>> RegisterAsync(RegisterRequestDto dto);
+    //     Task<ApiResponseDto<AuthResponseDto>> LoginAsync(LoginRequestDto dto);
+    //     Task<ApiResponseDto<string>> ForgotPasswordAsync(ForgotPasswordRequestDto dto);
+    //     Task<ApiResponseDto<string>> ResetPasswordAsync(ResetPasswordRequestDto dto);
+    //     Task<ApiResponseDto<string>> ChangePasswordAsync(Guid userId, ChangePasswordRequestDto dto);
+    // }
 
     public interface IUserService
     {

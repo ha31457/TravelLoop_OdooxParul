@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Travel_Odoo.Data;
 using Travel_Odoo.Models;
 using Travel_Odoo.Services;
+using Travel_Odoo.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,16 @@ builder.Services.AddAuthentication(options =>
 
 
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IUserService,     UserService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IActivityService, ActivityService>();
+builder.Services.AddScoped<ITripService,     TripService>();
+builder.Services.AddScoped<ITripStopService, TripStopService>();
+builder.Services.AddScoped<IBudgetService,   BudgetService>();
+builder.Services.AddScoped<IPackingService,  PackingService>();
+builder.Services.AddScoped<INoteService,     NoteService>();
+builder.Services.AddScoped<ISharingService,  SharingService>();
+
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration
     .GetSection("AllowedOrigins")
