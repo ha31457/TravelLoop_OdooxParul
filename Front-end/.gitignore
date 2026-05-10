@@ -1,0 +1,71 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output
+/.next/
+/out/
+
+# Production
+/build
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Coverage
+/coverage
+
+# IDEs
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# ESLint cache
+.eslintcache
+
+# Turbopack / TurboRepo
+.turbo/
+
+# Package manager locks (optional — usually commit ONE)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Static export
+/export
+
+# Local Netlify folder
+.netlify
+
+# Firebase
+.firebase/
+
+# Debug logs
+*.log
