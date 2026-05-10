@@ -12,6 +12,7 @@ public class TripNoteDto
     public DateOnly? NoteDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public string? Tag { get; set; }
 }
 
 public class CreateNoteRequestDto
