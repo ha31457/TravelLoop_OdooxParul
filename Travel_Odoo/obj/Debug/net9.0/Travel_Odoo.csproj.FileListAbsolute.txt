@@ -1,0 +1,8 @@
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.csproj.AssemblyReference.cache
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\rpswa.dswa.cache.json
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.GeneratedMSBuildEditorConfig.editorconfig
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.AssemblyInfoInputs.cache
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.AssemblyInfo.cs
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.csproj.CoreCompileInputs.cache
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.MvcApplicationPartsAssemblyInfo.cs
+D:\Hackathons\Odoo\Travel_Odoo\Travel_Odoo\obj\Debug\net9.0\Travel_Odoo.MvcApplicationPartsAssemblyInfo.cache

@@ -1,0 +1,6 @@
+@Travel_Odoo_HostAddress = http://localhost:5081
+
+GET {{Travel_Odoo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
