@@ -1,6 +1,492 @@
 @Travel_Odoo_HostAddress = http://localhost:5081
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmNjc3NDZlNS02OWNlLTRmNDYtMzAyZS0wOGRlYWU3NGUxOWQiLCJlbWFpbCI6ImFkbWluQHRyYXZlbC5jb20iLCJqdGkiOiI4N2M5MTcyYS1iNTcwLTQ4MjEtYjM2My1lM2JlMGJhNDIzMGMiLCJmdWxsTmFtZSI6IkFkbWluIFVzZXIiLCJleHAiOjE3Nzg0MDgyNzgsImlzcyI6IlRyYXZlbCIsImF1ZCI6IlRyYXZlbFVzZXJzIn0.VZjnLtbbuxFbYxQVzK_WJKI2c67UoroJK9I4aQa9khs
+@contentType = application/json
+@tripId = 00000000-0000-0000-0000-000000000000
+@stopId = 00000000-0000-0000-0000-000000000000
+@expenseId = 00000000-0000-0000-0000-000000000000
+@itemId = 00000000-0000-0000-0000-000000000000
+@noteId = 00000000-0000-0000-0000-000000000000
+@shareId = 00000000-0000-0000-0000-000000000000
+@cityId = 84bd8307-598f-44ea-a667-2181a4a75ad8
+@activityId = 00000000-0000-0000-0000-000000000000
+@stopActivityId = 00000000-0000-0000-0000-000000000000
+@slug = example-trip-slug
 
-GET {{Travel_Odoo_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login
+POST {{Travel_Odoo_HostAddress}}/api/auth/login
+Content-Type: {{contentType}}
 
+{
+  "email": "admin@travel.com",
+  "password": "Admin@123!"
+}
+
+### Register
+POST {{Travel_Odoo_HostAddress}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "",
+  "email": "",
+  "password": ""
+}
 ###
+POST {{Travel_Odoo_HostAddress}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Test User",
+  "email": "test@test.com",
+  "password": "Test1234!"
+}
+
+### Get Current User
+GET {{Travel_Odoo_HostAddress}}/api/auth/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+// =============== USER ENDPOINTS ===============
+
+### Get User Profile
+GET {{Travel_Odoo_HostAddress}}/api/user/profile
+Authorization: Bearer {{token}}
+
+### Update User Profile
+PUT {{Travel_Odoo_HostAddress}}/api/user/profile
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "fullName": "Updated Test User",
+  "phoneNumber": "1234567899"
+}
+
+### Delete Account
+DELETE {{Travel_Odoo_HostAddress}}/api/user/account
+Authorization: Bearer {{token}}
+
+### Save Destination
+POST {{Travel_Odoo_HostAddress}}/api/user/destinations/{{cityId}}
+Authorization: Bearer {{token}}
+
+### Remove Saved Destination
+DELETE {{Travel_Odoo_HostAddress}}/api/user/destinations/{{cityId}}
+Authorization: Bearer {{token}}
+
+### Get Saved Destinations
+GET {{Travel_Odoo_HostAddress}}/api/user/destinations
+Authorization: Bearer {{token}}
+
+
+// =============== LOCATION ENDPOINTS ===============
+
+### Search Cities
+GET {{Travel_Odoo_HostAddress}}/api/location/cities/search?query=Paris&countryId=&limit=10
+
+### Get City By ID
+GET {{Travel_Odoo_HostAddress}}/api/location/cities/{{cityId}}
+
+### Get All Countries
+GET {{Travel_Odoo_HostAddress}}/api/location/countries
+
+
+// =============== ACTIVITY ENDPOINTS ===============
+
+### Search Activities
+GET {{Travel_Odoo_HostAddress}}/api/activity/search?cityId={{cityId}}&category=FoodAndDrink&limit=10
+
+### Get Activity By ID
+GET {{Travel_Odoo_HostAddress}}/api/activity/{{activityId}}
+
+
+// =============== TRIP ENDPOINTS ===============
+
+### Create Trip
+POST {{Travel_Odoo_HostAddress}}/api/trip
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "My Paris Adventure",
+  "startDate": "2024-06-01T00:00:00Z",
+  "endDate": "2024-06-10T00:00:00Z",
+  "description": "A fun trip to Paris"
+}
+
+### Get User Trips (Paginated)
+GET {{Travel_Odoo_HostAddress}}/api/trip?page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Get Trip By ID
+GET {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+
+### Update Trip
+PUT {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "My Updated Paris Adventure",
+  "startDate": "2024-06-01T00:00:00Z",
+  "endDate": "2024-06-15T00:00:00Z",
+  "description": "Extended fun trip to Paris"
+}
+
+### Delete Trip
+DELETE {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+
+### Publish Trip
+POST {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}/publish
+Authorization: Bearer {{token}}
+
+### Get Public Trip By Slug
+GET {{Travel_Odoo_HostAddress}}/api/trip/public/{{slug}}
+
+### Copy Public Trip
+POST {{Travel_Odoo_HostAddress}}/api/trip/copy/{{slug}}
+Authorization: Bearer {{token}}
+
+
+// =============== TRIP STOP ENDPOINTS ===============
+
+### Add Trip Stop
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "cityId": "{{cityId}}",
+  "arrivalDate": "2024-06-01T00:00:00Z",
+  "departureDate": "2024-06-05T00:00:00Z",
+  "notes": "First Stop"
+}
+
+### Update Trip Stop
+PUT {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/{{stopId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "startDate": "2024-06-02T00:00:00Z",
+  "endDate": "2024-06-06T00:00:00Z"
+}
+
+### Reorder Stops
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/reorder
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "stopIds": ["{{stopId}}"]
+}
+
+### Delete Trip Stop
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/{{stopId}}
+Authorization: Bearer {{token}}
+
+### Add Activity To Stop
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/{{stopId}}/activities
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "activityId": "{{activityId}}",
+  "startTime": "2024-06-02T10:00:00Z",
+  "endTime": "2024-06-02T12:00:00Z",
+  "notes": "Eiffel Tower Visit"
+}
+
+### Update Stop Activity
+PUT {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/{{stopId}}/activities/{{stopActivityId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "startTime": "2024-06-02T11:00:00Z",
+  "endTime": "2024-06-02T13:00:00Z",
+  "notes": "Eiffel Tower Visit Rescheduled"
+}
+
+### Remove Activity From Stop
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops/{{stopId}}/activities/{{stopActivityId}}
+Authorization: Bearer {{token}}
+
+
+// =============== BUDGET ENDPOINTS ===============
+
+### Get Budget Summary
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/summary
+Authorization: Bearer {{token}}
+
+### Get All Expenses
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/expenses
+Authorization: Bearer {{token}}
+
+### Add Expense
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/expenses
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "amount": 100.50,
+  "currency": "USD",
+  "category": "Food",
+  "description": "Dinner at a nice restaurant",
+  "date": "2024-06-02T19:00:00Z"
+}
+
+### Update Expense
+PUT {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "amount": 120.00,
+  "currency": "USD",
+  "category": "Food",
+  "description": "Dinner and drinks at a nice restaurant",
+  "date": "2024-06-02T19:00:00Z"
+}
+
+### Delete Expense
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+
+
+// =============== PACKING ENDPOINTS ===============
+
+### Get Packing Checklist
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing
+Authorization: Bearer {{token}}
+
+### Add Packing Item
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing/items
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Passport",
+  "category": "Documents",
+  "quantity": 1
+}
+
+### Update Packing Item
+PUT {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing/items/{{itemId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Passport",
+  "category": "Documents",
+  "quantity": 1,
+  "isPacked": true
+}
+
+### Delete Packing Item
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### Reset Checklist
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing/reset
+Authorization: Bearer {{token}}
+
+
+// =============== NOTE ENDPOINTS ===============
+
+### Get Notes (Optional StopId Query)
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes?stopId={{stopId}}
+Authorization: Bearer {{token}}
+
+### Add Note
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "stopId": null,
+  "title": "Flight info",
+  "content": "Flight departs at 10 AM from Gate C"
+}
+
+### Update Note
+PUT {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Flight info updated",
+  "content": "Flight departs at 10:30 AM from Gate C"
+}
+
+### Delete Note
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+
+
+// =============== SHARING ENDPOINTS ===============
+
+### Get Trip Shares
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/sharing
+Authorization: Bearer {{token}}
+
+### Share Trip
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/sharing
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "email": "friend@example.com",
+  "permission": "Read"
+}
+
+### Revoke Share
+DELETE {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/sharing/{{shareId}}
+Authorization: Bearer {{token}}
+
+
+// =============== AI FLOWS ===============
+
+// --- FLOW 1: Create Trip (triggers AI itinerary suggestion) ---
+
+### Step 1: Create Trip
+// After this, AI will fire-and-forget to suggest stops
+POST {{Travel_Odoo_HostAddress}}/api/trip
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Europe Summer Adventure",
+  "description": "A 10-day trip across Europe visiting major cities",
+  "startDate": "2024-07-01",
+  "endDate": "2024-07-10",
+  "totalBudget": 3000,
+  "currencyCode": "USD"
+}
+
+### Step 2: Get Trip (wait a few seconds, then check if AI stops were created)
+GET {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+
+
+// --- FLOW 2: Add Stop (triggers AI activity suggestions) ---
+
+### Step 3: Add Stop to Trip
+// After this, AI will fire-and-forget to suggest activities for the city
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/stops
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "cityId": "{{cityId}}",
+  "arrivalDate": "2024-07-01",
+  "departureDate": "2024-07-04",
+  "notes": "First stop of the trip"
+}
+
+### Step 4: Get Trip again (wait a few seconds, check if AI activities were added)
+GET {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+
+
+// --- FLOW 3: Note Summary (triggers when trip has 5+ notes) ---
+
+### Step 5a: Add Note 1
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Flight Info",
+  "content": "Flight departs at 10 AM from Gate C, Terminal 2",
+  "noteDate": "2024-07-01"
+}
+
+### Step 5b: Add Note 2
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Hotel Checkin",
+  "content": "Hotel checkin at 3 PM, confirmation number 8823XX",
+  "noteDate": "2024-07-01"
+}
+
+### Step 5c: Add Note 3
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Restaurant Reservation",
+  "content": "Dinner reservation at La Maison at 7 PM, booked for 2 people",
+  "noteDate": "2024-07-02"
+}
+
+### Step 5d: Add Note 4
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Museum Tickets",
+  "content": "Pre-booked tickets for Louvre, entry at 11 AM on July 3rd",
+  "noteDate": "2024-07-03"
+}
+
+### Step 5e: Add Note 5
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Transport",
+  "content": "Train from Paris to Amsterdam on July 4th at 9 AM, seat 14B",
+  "noteDate": "2024-07-04"
+}
+
+### Step 6: Get Trip (AI summary note should now be generated, look for tag: "Summary")
+GET {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}
+Authorization: Bearer {{token}}
+
+
+// --- FLOW 4: Publish Trip (triggers AI budget estimation + packing list) ---
+
+### Step 7: Publish Trip
+// Response will include: { publicSlug, packingList: { items: [...] } }
+// Save the packingList items from response to use in Step 8
+POST {{Travel_Odoo_HostAddress}}/api/trip/{{tripId}}/publish
+Authorization: Bearer {{token}}
+
+### Step 8: Confirm & Save AI Packing List
+// Paste the items array from the publish response here
+POST {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing/ai-save
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    { "name": "Passport", "category": "Documents" },
+    { "name": "Phone Charger", "category": "Electronics" },
+    { "name": "T-Shirts", "category": "Clothing" },
+    { "name": "Sunscreen", "category": "Toiletries" },
+    { "name": "Travel Insurance", "category": "Documents" }
+  ]
+}
+
+### Step 9: Verify Packing Checklist was saved
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/packing
+Authorization: Bearer {{token}}
+
+### Step 10: Verify Budget Estimates were saved (IsAiGenerated = true, IsEstimate = true)
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/expenses
+Authorization: Bearer {{token}}
+
+### Step 11: Check Budget Summary reflects AI estimates
+GET {{Travel_Odoo_HostAddress}}/api/trips/{{tripId}}/budget/summary
+Authorization: Bearer {{token}}
+
+### Step 12: Access Published Trip via Slug
+GET {{Travel_Odoo_HostAddress}}/api/trip/public/{{slug}}
