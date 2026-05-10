@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // --- Dummy Data ---
 
@@ -115,13 +116,47 @@ export default function CreateTripPage() {
     setStyles(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
   };
 
-  const generateMagic = () => {
+  const router = useRouter();
+
+  const generateMagic = async () => {
     setIsGenerating(true);
-    // Simulate AI Generation delay
-    setTimeout(() => {
-      // In a real app, this would route to the generated itinerary
-      window.location.href = "/dashboard";
-    }, 4000);
+    
+    try {
+      const token = localStorage.getItem("token");
+      const tripDto = {
+        Name: `Trip to ${destination || "Unknown"}`,
+        Description: `A ${budget} trip focused on ${styles.length > 0 ? styles.join(", ") : "general exploration"}. Built with Magic Builder.`,
+        CoverPhotoUrl: bgImage,
+        StartDate: "2026-10-12",
+        EndDate: "2026-10-24",
+        TotalBudget: budget === "luxury" ? 10000 : budget === "moderate" ? 3000 : 1000,
+        CurrencyCode: "USD"
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Trip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(tripDto)
+      });
+
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to create trip.");
+      }
+
+      // Simulate AI Generation delay to preserve the cool UI effect
+      setTimeout(() => {
+        router.push("/trips");
+      }, 4000);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to craft magic itinerary. Please check your connection.");
+      setIsGenerating(false);
+    }
   };
 
   return (

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // --- Types & Data ---
 
@@ -155,6 +156,53 @@ export default function RegisterPage() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError("");
+    
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          FullName: `${firstName} ${lastName}`.trim(), 
+          Email: email, 
+          Password: password 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to register.");
+      }
+
+      localStorage.setItem("token", data.token || data.Token);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleNext = () => {
     if (step < STEPS.length - 1) setStep(step + 1);
   };
@@ -261,6 +309,12 @@ export default function RegisterPage() {
             <p className="mt-2 text-white/60">{currentStep.subtitle}</p>
           </div>
 
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-500/10 p-3 text-sm text-red-400 border border-red-500/20">
+              {error}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -273,11 +327,11 @@ export default function RegisterPage() {
               {/* STEP 1: Account */}
               {step === 0 && (
                 <div className="space-y-6">
-                  <FloatingLabelInput icon={<Mail className="h-5 w-5" />} label="Email Address" type="email" />
+                  <FloatingLabelInput icon={<Mail className="h-5 w-5" />} label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   <FloatingLabelInput icon={<Phone className="h-5 w-5" />} label="Phone Number" type="tel" />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FloatingLabelInput icon={<Lock className="h-5 w-5" />} label="Password" type="password" />
-                    <FloatingLabelInput icon={<Lock className="h-5 w-5" />} label="Confirm Password" type="password" />
+                    <FloatingLabelInput icon={<Lock className="h-5 w-5" />} label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <FloatingLabelInput icon={<Lock className="h-5 w-5" />} label="Confirm Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                   </div>
                 </div>
               )}
@@ -305,8 +359,8 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FloatingLabelInput icon={<User className="h-5 w-5" />} label="First Name" />
-                    <FloatingLabelInput icon={<User className="h-5 w-5" />} label="Last Name" />
+                    <FloatingLabelInput icon={<User className="h-5 w-5" />} label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    <FloatingLabelInput icon={<User className="h-5 w-5" />} label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FloatingLabelInput icon={<MapPin className="h-5 w-5" />} label="City" />
@@ -373,14 +427,15 @@ export default function RegisterPage() {
             )}
 
             <button
-              onClick={step === STEPS.length - 1 ? () => console.log("Submit") : handleNext}
-              className="group relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-[#2C9BB5] px-8 py-3 text-sm font-bold text-brand-bg transition-all duration-300 hover:shadow-[0_0_20px_rgba(73,198,229,0.4)] active:scale-95"
+              onClick={step === STEPS.length - 1 ? handleSubmit : handleNext}
+              disabled={isLoading}
+              className="group relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-[#2C9BB5] px-8 py-3 text-sm font-bold text-brand-bg transition-all duration-300 hover:shadow-[0_0_20px_rgba(73,198,229,0.4)] active:scale-95 disabled:opacity-50"
             >
               <span className="relative z-10 flex items-center gap-2">
-                {step === STEPS.length - 1 ? "Complete Profile" : "Continue"}
-                {step !== STEPS.length - 1 && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                {isLoading ? "Processing..." : (step === STEPS.length - 1 ? "Complete Profile" : "Continue")}
+                {step !== STEPS.length - 1 && !isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
               </span>
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-500 ease-in-out group-hover:translate-x-full" />
+              {!isLoading && <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-500 ease-in-out group-hover:translate-x-full" />}
             </button>
           </div>
 

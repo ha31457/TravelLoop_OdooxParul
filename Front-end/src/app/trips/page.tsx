@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe,
@@ -13,7 +13,10 @@ import {
   Plus,
   ArrowRight,
   Plane,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  Edit2,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -35,86 +38,19 @@ interface Trip {
   budgetColor: string;
   progress: number;
   collaborators: string[];
+  rawStartDate?: string;
+  rawEndDate?: string;
+  description?: string;
+  totalBudget?: number;
 }
 
-const TRIPS: Trip[] = [
-  {
-    id: "t1",
-    title: "Summer Eurotrip",
-    location: "Europe (Multiple)",
-    image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop",
-    date: "Jul 12 - Aug 05, 2026",
-    status: "upcoming",
-    isFavorite: true,
-    countdown: "In 62 Days",
-    budgetStatus: "On Track",
-    budgetColor: "text-brand-primary",
-    progress: 85,
-    collaborators: ["10", "11", "12", "13"],
-  },
-  {
-    id: "t2",
-    title: "Kyoto Sakura Season",
-    location: "Kyoto, Japan",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070&auto=format&fit=crop",
-    date: "Current Trip",
-    status: "ongoing",
-    isFavorite: true,
-    countdown: "Active Now",
-    budgetStatus: "Under Budget",
-    budgetColor: "text-brand-secondary",
-    progress: 40,
-    collaborators: ["20", "21"],
-  },
-  {
-    id: "t3",
-    title: "Ski Weekend",
-    location: "Aspen, CO",
-    image: "https://images.unsplash.com/photo-1551524164-687a55dd1126?q=80&w=2025&auto=format&fit=crop",
-    date: "Dec 15 - Dec 18, 2026",
-    status: "upcoming",
-    isFavorite: false,
-    countdown: "In 7 Months",
-    budgetStatus: "Over Budget",
-    budgetColor: "text-brand-highlight",
-    progress: 15,
-    collaborators: ["30", "31", "32"],
-  },
-  {
-    id: "t4",
-    title: "Bali Retreat",
-    location: "Bali, Indonesia",
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2038&auto=format&fit=crop",
-    date: "Jan 10 - Jan 24, 2025",
-    status: "completed",
-    isFavorite: true,
-    countdown: "Ended",
-    budgetStatus: "On Track",
-    budgetColor: "text-brand-primary",
-    progress: 100,
-    collaborators: ["10", "40"],
-  },
-  {
-    id: "t5",
-    title: "New York City Push",
-    location: "NYC, New York",
-    image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=2070&auto=format&fit=crop",
-    date: "Mar 05 - Mar 10, 2025",
-    status: "completed",
-    isFavorite: false,
-    countdown: "Ended",
-    budgetStatus: "Over Budget",
-    budgetColor: "text-brand-highlight",
-    progress: 100,
-    collaborators: ["11", "20"],
-  },
-];
+const INITIAL_TRIPS: Trip[] = [];
 
 const FILTERS = ["All", "Ongoing", "Upcoming", "Completed", "Favorites"];
 
 // --- Components ---
 
-const TripCard = ({ trip }: { trip: Trip }) => {
+const TripCard = ({ trip, onDelete, onEdit }: { trip: Trip; onDelete: (id: string) => void; onEdit: (trip: Trip) => void }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -167,9 +103,32 @@ const TripCard = ({ trip }: { trip: Trip }) => {
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-20 right-5 z-10 flex flex-col gap-2"
           >
-            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/10 hover:bg-brand-primary hover:text-black transition-colors text-white">
-               <MoreHorizontal className="h-4 w-4" />
-            </button>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit(trip);
+                }}
+                title="Edit Trip"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/80 backdrop-blur-md border border-brand-primary/50 hover:bg-brand-primary hover:text-black transition-colors text-black"
+              >
+                 <Edit2 className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (window.confirm("Are you sure you want to delete this trip?")) {
+                    onDelete(trip.id);
+                  }
+                }}
+                title="Delete Trip"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/60 backdrop-blur-md border border-red-500/50 hover:bg-red-500 hover:text-white transition-colors text-white"
+              >
+                 <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -227,8 +186,164 @@ const TripCard = ({ trip }: { trip: Trip }) => {
 
 export default function MyTripsPage() {
   const [activeFilter, setActiveFilter] = useState("All");
+  const [trips, setTrips] = useState<Trip[]>(INITIAL_TRIPS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    coverPhotoUrl: "",
+    startDate: "",
+    endDate: "",
+    totalBudget: 0,
+    currencyCode: "USD"
+  });
 
-  const filteredTrips = TRIPS.filter(trip => {
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Trip?page=1&pageSize=20`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const json = await response.json();
+        
+        if (!response.ok || !json.success) {
+          throw new Error(json.message || "Failed to fetch trips.");
+        }
+
+        const mappedTrips: Trip[] = json.data.items.map((t: any) => ({
+          id: t.id,
+          title: t.name,
+          location: "Location Data Unavailable", // Could map from API if added
+          image: t.coverPhotoUrl || "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2020&auto=format&fit=crop",
+          date: `${new Date(t.startDate).toLocaleDateString()} - ${new Date(t.endDate).toLocaleDateString()}`,
+          status: (t.status || "upcoming").toLowerCase() as TripStatus,
+          isFavorite: false, // Could be mapped if API supports
+          countdown: t.status === "completed" ? "Ended" : (t.status === "ongoing" ? "Active Now" : "Upcoming"),
+          budgetStatus: "On Track", // Simulated
+          budgetColor: "text-brand-primary",
+          progress: t.status === "completed" ? 100 : (t.status === "ongoing" ? 50 : 0),
+          collaborators: ["68", "11"], // Simulated
+          rawStartDate: t.startDate,
+          rawEndDate: t.endDate,
+          description: t.description || "",
+          totalBudget: t.totalBudget || 0,
+        }));
+
+        setTrips(mappedTrips);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrips();
+  }, []);
+
+  const handleDeleteTrip = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Trip/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Some APIs might return 204 No Content for DELETE without JSON body
+      if (res.status === 204) {
+         setTrips((prev) => prev.filter((t) => t.id !== id));
+         return;
+      }
+
+      const json = await res.json();
+      if (!res.ok || (json.hasOwnProperty('success') && !json.success)) {
+        throw new Error(json.message || "Failed to delete trip.");
+      }
+      
+      setTrips((prev) => prev.filter((t) => t.id !== id));
+    } catch (err: any) {
+      setError(err.message);
+      // Automatically hide error after 3 seconds
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
+  const handleEditClick = (trip: Trip) => {
+    setEditingTrip(trip);
+    setEditForm({
+      name: trip.title,
+      description: trip.description || "",
+      coverPhotoUrl: trip.image,
+      startDate: trip.rawStartDate || "",
+      endDate: trip.rawEndDate || "",
+      totalBudget: trip.totalBudget || 0,
+      currencyCode: "USD"
+    });
+  };
+
+  const handleUpdateTrip = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTrip) return;
+    setIsUpdating(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      const dto = {
+        Name: editForm.name,
+        Description: editForm.description,
+        CoverPhotoUrl: editForm.coverPhotoUrl,
+        StartDate: editForm.startDate,
+        EndDate: editForm.endDate,
+        TotalBudget: editForm.totalBudget,
+        CurrencyCode: editForm.currencyCode
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Trip/${editingTrip.id}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(dto)
+      });
+      
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || "Failed to update trip.");
+      }
+
+      setTrips(prev => prev.map(t => {
+        if(t.id === editingTrip.id) {
+          return {
+             ...t,
+             title: dto.Name,
+             image: dto.CoverPhotoUrl || t.image,
+             date: `${new Date(dto.StartDate).toLocaleDateString()} - ${new Date(dto.EndDate).toLocaleDateString()}`,
+             rawStartDate: dto.StartDate,
+             rawEndDate: dto.EndDate,
+             description: dto.Description,
+             totalBudget: dto.TotalBudget
+          };
+        }
+        return t;
+      }));
+      setEditingTrip(null);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const filteredTrips = trips.filter(trip => {
     if (activeFilter === "All") return true;
     if (activeFilter === "Favorites") return trip.isFavorite;
     return trip.status === activeFilter.toLowerCase();
@@ -281,17 +396,29 @@ export default function MyTripsPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-6 rounded-lg bg-red-500/10 p-4 text-sm text-red-400 border border-red-500/20 text-center">
+            {error}
+          </div>
+        )}
+
         {/* Trips Grid */}
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence>
-            {filteredTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
-            ))}
+            {isLoading ? (
+               <div className="col-span-full flex justify-center py-20">
+                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-brand-primary" />
+               </div>
+            ) : (
+              filteredTrips.map((trip) => (
+                <TripCard key={trip.id} trip={trip} onDelete={handleDeleteTrip} onEdit={handleEditClick} />
+              ))
+            )}
           </AnimatePresence>
         </motion.div>
 
         {/* Empty State */}
-        {filteredTrips.length === 0 && (
+        {!isLoading && filteredTrips.length === 0 && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -309,6 +436,71 @@ export default function MyTripsPage() {
         )}
 
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingTrip && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-[#0E2238] shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 p-6">
+                <h2 className="font-heading text-2xl font-bold text-white">Edit Trip</h2>
+                <button onClick={() => setEditingTrip(null)} className="rounded-full bg-white/5 p-2 text-white/50 hover:bg-white/10 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateTrip} className="p-6 space-y-4">
+                <div>
+                  <label className="text-xs uppercase text-white/50 mb-1 block">Trip Name</label>
+                  <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary" required />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs uppercase text-white/50 mb-1 block">Start Date</label>
+                    <input type="date" value={editForm.startDate} onChange={e => setEditForm({...editForm, startDate: e.target.value})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary [&::-webkit-calendar-picker-indicator]:invert" required />
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase text-white/50 mb-1 block">End Date</label>
+                    <input type="date" value={editForm.endDate} onChange={e => setEditForm({...editForm, endDate: e.target.value})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary [&::-webkit-calendar-picker-indicator]:invert" required />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs uppercase text-white/50 mb-1 block">Budget</label>
+                    <input type="number" value={editForm.totalBudget} onChange={e => setEditForm({...editForm, totalBudget: Number(e.target.value)})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary" />
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase text-white/50 mb-1 block">Currency</label>
+                    <input type="text" value={editForm.currencyCode} onChange={e => setEditForm({...editForm, currencyCode: e.target.value})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary" maxLength={3} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase text-white/50 mb-1 block">Description</label>
+                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className="w-full rounded-xl border border-white/10 bg-black/40 p-3 text-white outline-none focus:border-brand-primary resize-none h-24" />
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setEditingTrip(null)} className="rounded-full border border-white/10 px-6 py-2.5 text-sm font-medium text-white hover:bg-white/5">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isUpdating} className="rounded-full bg-brand-primary px-6 py-2.5 text-sm font-bold text-black hover:bg-brand-primary/90 disabled:opacity-50 flex items-center gap-2">
+                    {isUpdating ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </main>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Settings,
@@ -15,7 +15,9 @@ import {
   TrendingUp,
   Image as ImageIcon,
   Edit2,
-  Plus
+  Plus,
+  Save,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -54,6 +56,70 @@ const GlassCard = ({ children, className }: { children: React.ReactNode; classNa
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ fullName: "", phoneNumber: "", languagePreference: "en" });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/User/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+        
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Failed to load profile");
+        }
+        
+        setUserProfile(json.data);
+        setEditForm({
+          fullName: json.data.fullName || "",
+          phoneNumber: json.data.phoneNumber || "",
+          languagePreference: "en"
+        });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setError("");
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/User/profile`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(editForm)
+      });
+      
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || "Failed to update profile");
+      }
+      
+      setUserProfile(json.data);
+      setIsEditing(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <main className="min-h-screen w-full bg-brand-bg font-sans text-brand-text selection:bg-brand-primary selection:text-brand-bg pb-24">
@@ -86,19 +152,78 @@ export default function ProfilePage() {
             <div className="px-6 pb-6 pt-0 relative">
               <div className="flex justify-between items-end -mt-12 mb-4">
                 <div className="relative h-24 w-24 rounded-full border-4 border-[#071120] bg-brand-surface overflow-hidden">
-                  <img src="https://i.pravatar.cc/150?img=68" alt="Alex" className="h-full w-full object-cover" />
+                  <img src={userProfile?.profilePhotoUrl || "https://i.pravatar.cc/150?img=68"} alt="Avatar" className="h-full w-full object-cover" />
                 </div>
-                <button className="flex items-center gap-1.5 rounded-full bg-brand-primary px-4 py-1.5 text-xs font-bold text-black hover:bg-brand-primary/90 transition-colors">
-                  <Edit2 className="h-3 w-3" /> Edit Profile
-                </button>
+                
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setIsEditing(false)}
+                      className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
+                    >
+                      <X className="h-3 w-3" /> Cancel
+                    </button>
+                    <button 
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex items-center gap-1.5 rounded-full bg-green-500 px-4 py-1.5 text-xs font-bold text-[#071120] hover:bg-green-400 transition-colors disabled:opacity-50"
+                    >
+                      <Save className="h-3 w-3" /> {isSaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1.5 rounded-full bg-brand-primary px-4 py-1.5 text-xs font-bold text-black hover:bg-brand-primary/90 transition-colors"
+                  >
+                    <Edit2 className="h-3 w-3" /> Edit Profile
+                  </button>
+                )}
               </div>
               
-              <div>
-                <h1 className="font-heading text-2xl font-bold text-white">Alex Traveler</h1>
-                <p className="flex items-center gap-1.5 text-sm text-white/60 mt-1">
-                  <MapPin className="h-3.5 w-3.5" /> San Francisco, CA
-                </p>
-              </div>
+              {error && (
+                <div className="mb-4 rounded-lg bg-red-500/10 p-2 text-xs text-red-400 border border-red-500/20">
+                  {error}
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-6 w-1/2 rounded bg-white/10" />
+                  <div className="h-4 w-1/3 rounded bg-white/10" />
+                </div>
+              ) : isEditing ? (
+                <div className="space-y-3 mt-2">
+                   <div>
+                     <label className="text-xs text-white/50 uppercase tracking-wider">Full Name</label>
+                     <input 
+                        type="text" 
+                        value={editForm.fullName} 
+                        onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                        className="w-full mt-1 rounded-lg border border-white/20 bg-black/20 p-2 text-sm text-white outline-none focus:border-brand-primary"
+                     />
+                   </div>
+                   <div>
+                     <label className="text-xs text-white/50 uppercase tracking-wider">Phone Number</label>
+                     <input 
+                        type="tel" 
+                        value={editForm.phoneNumber} 
+                        onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
+                        className="w-full mt-1 rounded-lg border border-white/20 bg-black/20 p-2 text-sm text-white outline-none focus:border-brand-primary"
+                     />
+                   </div>
+                </div>
+              ) : (
+                <div>
+                  <h1 className="font-heading text-2xl font-bold text-white">{userProfile?.fullName || "Traveler"}</h1>
+                  <p className="flex items-center gap-1.5 text-sm text-white/60 mt-1">
+                    <MapPin className="h-3.5 w-3.5" /> {userProfile?.email || "No email provided"}
+                  </p>
+                  {userProfile?.phoneNumber && (
+                    <p className="text-xs text-white/40 mt-1">{userProfile.phoneNumber}</p>
+                  )}
+                </div>
+              )}
 
               <p className="mt-4 text-sm text-white/80 leading-relaxed">
                 Chasing horizons and coffee beans. Always ready for the next adventure, whether it's a snowy peak or a vibrant city street.
@@ -107,12 +232,14 @@ export default function ProfilePage() {
               {/* Mini Stats Grid */}
               <div className="mt-6 flex gap-4 border-t border-white/10 pt-4">
                  <div className="flex-1 text-center">
-                    <span className="block text-xl font-bold text-white">42</span>
-                    <span className="text-xs text-white/50 uppercase tracking-wider">Followers</span>
+                    <span className="block text-xl font-bold text-white">{userProfile?.savedDestinations?.length || 0}</span>
+                    <span className="text-xs text-white/50 uppercase tracking-wider">Saved Places</span>
                  </div>
                  <div className="flex-1 text-center border-l border-white/10">
-                    <span className="block text-xl font-bold text-white">36</span>
-                    <span className="text-xs text-white/50 uppercase tracking-wider">Following</span>
+                    <span className="block text-xl font-bold text-white">
+                      {userProfile?.createdAt ? new Date(userProfile.createdAt).getFullYear() : 2026}
+                    </span>
+                    <span className="text-xs text-white/50 uppercase tracking-wider">Joined</span>
                  </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -15,7 +15,8 @@ import {
   Users,
   Utensils,
   Plus,
-  Compass
+  Compass,
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -31,39 +32,45 @@ const CATEGORIES = [
   { id: "local", label: "Local Experiences", icon: Users },
 ];
 
-interface DiscoveryCard {
+interface CountryDto {
   id: string;
-  category: string;
-  title: string;
-  location: string;
-  rating: string;
-  image: string;
-  height: string; // Tailoring masonry heights
+  name: string;
+  isoCode: string;
+  region?: string;
 }
-
-const DISCOVERIES: DiscoveryCard[] = [
-  { id: "1", category: "sightseeing", title: "Fushimi Inari Shrine", location: "Kyoto, Japan", rating: "4.9", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop", height: "h-[300px]" },
-  { id: "2", category: "restaurants", title: "Kitcho Arashiyama", location: "Kyoto, Japan", rating: "4.8", image: "https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?q=80&w=1000&auto=format&fit=crop", height: "h-[400px]" },
-  { id: "3", category: "adventures", title: "Mt. Fuji Sunrise Trek", location: "Honshu, Japan", rating: "5.0", image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=1000&auto=format&fit=crop", height: "h-[250px]" },
-  { id: "4", category: "local", title: "Traditional Tea Ceremony", location: "Gion, Kyoto", rating: "4.7", image: "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?q=80&w=1000&auto=format&fit=crop", height: "h-[350px]" },
-  { id: "5", category: "nightlife", title: "Pontocho Alley Bars", location: "Kyoto, Japan", rating: "4.6", image: "https://images.unsplash.com/photo-1558280689-f4d0bb0cc982?q=80&w=1000&auto=format&fit=crop", height: "h-[450px]" },
-  { id: "6", category: "sightseeing", title: "Arashiyama Bamboo Grove", location: "Kyoto, Japan", rating: "4.9", image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop", height: "h-[280px]" },
-  { id: "7", category: "restaurants", title: "Nishiki Market Street Food", location: "Kyoto, Japan", rating: "4.8", image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=1000&auto=format&fit=crop", height: "h-[320px]" },
-  { id: "8", category: "adventures", title: "Nara Deer Park Excursion", location: "Nara, Japan", rating: "4.9", image: "https://images.unsplash.com/photo-1542051812-f453a26d0e65?q=80&w=1000&auto=format&fit=crop", height: "h-[380px]" },
-  { id: "9", category: "local", title: "Samurai Sword Lesson", location: "Tokyo, Japan", rating: "4.8", image: "https://images.unsplash.com/photo-1514806254641-f7614e5a9526?q=80&w=1000&auto=format&fit=crop", height: "h-[300px]" },
-  { id: "10", category: "nightlife", title: "Golden Gai Izakayas", location: "Shinjuku, Tokyo", rating: "4.7", image: "https://images.unsplash.com/photo-1504626835613-25ee50e2bf98?q=80&w=1000&auto=format&fit=crop", height: "h-[400px]" },
-];
 
 export default function DiscoverPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMap, setShowMap] = useState(false);
 
-  const filteredDiscoveries = DISCOVERIES.filter((d) => {
-    const matchesCategory = activeCategory === "all" || d.category === activeCategory;
-    const matchesSearch = d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const [countries, setCountries] = useState<CountryDto[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Location/countries`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const json = await res.json();
+        if (json.success) {
+          setCountries(json.data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  const filteredCountries = countries.filter((c) => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (c.region && c.region.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <main className="min-h-screen bg-brand-bg font-sans text-brand-text selection:bg-brand-primary selection:text-brand-bg pb-24">
@@ -90,7 +97,7 @@ export default function DiscoverPage() {
             <Search className="h-5 w-5 text-white/40" />
             <input
               type="text"
-              placeholder="Search Kyoto for restaurants, hikes, hidden gems..."
+              placeholder="Search countries by name or region..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ml-3 w-full bg-transparent text-sm text-white placeholder-white/40 outline-none"
@@ -118,30 +125,6 @@ export default function DiscoverPage() {
         </div>
       </header>
 
-      {/* Categories Chips */}
-      <div className="relative z-40 mx-auto max-w-[1600px] px-6 py-4">
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            const isActive = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={cn(
-                  "flex items-center gap-2 whitespace-nowrap rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300",
-                  isActive
-                    ? "border-brand-primary bg-brand-primary/10 text-brand-primary shadow-[0_0_15px_rgba(73,198,229,0.15)]"
-                    : "border-white/10 bg-[#071120]/60 text-white/60 hover:bg-white/5 hover:text-white backdrop-blur-md"
-                )}
-              >
-                {Icon && <Icon className="h-4 w-4" />}
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="relative z-10 mx-auto max-w-[1600px] px-6">
         
@@ -158,56 +141,68 @@ export default function DiscoverPage() {
                showMap && "lg:columns-2 xl:columns-2"
             )}>
               <AnimatePresence>
-                {filteredDiscoveries.map((card) => (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.4 }}
-                    key={card.id}
-                    className={cn("group relative w-full overflow-hidden rounded-3xl bg-white/5 border border-white/10 break-inside-avoid cursor-pointer", card.height)}
-                  >
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-80 group-hover:opacity-100"
-                    />
-                    
-                    {/* Gradients for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071120]/90 via-[#071120]/20 to-transparent transition-opacity duration-300 group-hover:via-[#071120]/40" />
+                {isLoading ? (
+                  <div className="col-span-full flex justify-center py-20">
+                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-brand-primary" />
+                  </div>
+                ) : filteredCountries.map((country, idx) => {
+                  // Generating some mock variation in heights for masonry look
+                  const heights = ["h-[250px]", "h-[300px]", "h-[350px]", "h-[400px]"];
+                  const hClass = heights[idx % heights.length];
+                  // Simulated random beautiful fallback images for countries since the API doesn't return one
+                  const mockImages = [
+                    "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=1000&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?q=80&w=1000&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1504626835613-25ee50e2bf98?q=80&w=1000&auto=format&fit=crop"
+                  ];
+                  const img = mockImages[idx % mockImages.length];
 
-                    {/* Top Right Action */}
-                    <button className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-brand-highlight hover:border-brand-highlight hover:text-white transition-all text-white/70 z-10">
-                      <Heart className="h-4 w-4" />
-                    </button>
-
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col justify-end transition-transform duration-300 transform translate-y-2 group-hover:translate-y-0">
-                      <div className="mb-2 flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-0.5 w-max backdrop-blur-md border border-white/10">
-                         <Star className="h-3 w-3 fill-brand-secondary text-brand-secondary" />
-                         <span className="text-[10px] font-bold text-white">{card.rating}</span>
-                      </div>
-                      <h3 className="font-heading text-xl font-bold text-white leading-tight drop-shadow-md">{card.title}</h3>
-                      <p className="mt-1 flex items-center gap-1 text-sm text-white/70">
-                         <MapIcon className="h-3 w-3" /> {card.location}
-                      </p>
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.4 }}
+                      key={country.id}
+                      className={cn("group relative w-full overflow-hidden rounded-3xl bg-white/5 border border-white/10 break-inside-avoid cursor-pointer", hClass)}
+                    >
+                      <Link href={`/discover/${country.id}`} className="absolute inset-0 z-20" />
                       
-                      {/* Add to Trip Button (Appears on Hover) */}
-                      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-bold text-black opacity-0 transition-opacity duration-300 hover:bg-brand-primary/90 group-hover:opacity-100">
-                        <Plus className="h-4 w-4" /> Add to Loop
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                      <img
+                        src={img}
+                        alt={country.name}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                      />
+                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#071120]/90 via-[#071120]/20 to-transparent transition-opacity duration-300 group-hover:via-[#071120]/40" />
+
+                      <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col justify-end transition-transform duration-300 transform translate-y-2 group-hover:translate-y-0">
+                        <div className="mb-2 flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-0.5 w-max backdrop-blur-md border border-white/10">
+                           <Globe className="h-3 w-3 text-brand-secondary" />
+                           <span className="text-[10px] font-bold text-white">{country.isoCode}</span>
+                        </div>
+                        <h3 className="font-heading text-2xl font-bold text-white leading-tight drop-shadow-md">{country.name}</h3>
+                        <p className="mt-1 flex items-center gap-1 text-sm text-white/70">
+                           <MapIcon className="h-3 w-3" /> {country.region || "Global"}
+                        </p>
+                        
+                        <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-bold text-black opacity-0 transition-opacity duration-300 hover:bg-brand-primary/90 group-hover:opacity-100">
+                          <Compass className="h-4 w-4" /> Explore Cities
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
             
-            {filteredDiscoveries.length === 0 && (
+            {!isLoading && filteredCountries.length === 0 && (
               <div className="flex flex-col items-center justify-center py-32 text-center w-full">
                 <Search className="h-12 w-12 text-white/20 mb-4" />
-                <h3 className="font-heading text-2xl font-bold text-white">No experiences found</h3>
-                <p className="text-white/50 mt-2">Try adjusting your search or filters.</p>
+                <h3 className="font-heading text-2xl font-bold text-white">No countries found</h3>
+                <p className="text-white/50 mt-2">Try adjusting your search.</p>
               </div>
             )}
           </div>
@@ -224,13 +219,13 @@ export default function DiscoverPage() {
               <div className="absolute inset-0 bg-[#071120]/30 mix-blend-multiply" />
               
               {/* Dummy Map Pins */}
-              {filteredDiscoveries.slice(0, 4).map((d, i) => (
+              {filteredCountries.slice(0, 4).map((c, i) => (
                 <div key={i} className="absolute flex flex-col items-center group cursor-pointer" style={{ top: `${20 + i*15}%`, left: `${30 + i*10}%` }}>
                   <div className="mb-1 opacity-0 transition-opacity group-hover:opacity-100 bg-[#071120] text-white text-xs font-bold py-1 px-2 rounded whitespace-nowrap border border-brand-primary">
-                    {d.title}
+                    {c.name}
                   </div>
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-black shadow-[0_0_15px_rgba(73,198,229,0.5)] transition-transform group-hover:scale-125 border border-[#071120]">
-                    <Utensils className="h-4 w-4" />
+                    <Globe className="h-4 w-4" />
                   </div>
                 </div>
               ))}

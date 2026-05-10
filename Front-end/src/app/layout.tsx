@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Collaboratively plan trips, manage budgets, build itineraries, and discover activities together.",
 };
 
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +31,9 @@ export default function RootLayout({
       className={`${inter.variable} ${poppins.variable} dark antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#071120] text-[#F7FAFC] font-sans selection:bg-[#49C6E5] selection:text-[#071120]">
-        {children}
+        <ProtectedRoute>
+          {children}
+        </ProtectedRoute>
       </body>
     </html>
   );

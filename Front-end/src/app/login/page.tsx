@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Globe, ArrowRight, Mail, Lock, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // --- Custom Components ---
 
@@ -66,6 +67,44 @@ export default function LoginPage() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+  };
+
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/Auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ Email: email, Password: password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to login. Please check your credentials.");
+      }
+
+      // Store the token in local storage
+      localStorage.setItem("token", data.token || data.Token);
+      
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -154,12 +193,21 @@ export default function LoginPage() {
                 <p className="mt-2 text-sm text-white/50">Enter your details to access your loops.</p>
               </motion.div>
 
-              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-5" onSubmit={handleLogin}>
+                {error && (
+                  <motion.div variants={itemVariants} className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400 border border-red-500/20">
+                    {error}
+                  </motion.div>
+                )}
+                
                 <motion.div variants={itemVariants}>
                   <GlassInput
                     type="email"
                     placeholder="name@example.com"
                     icon={<Mail className="h-5 w-5" />}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </motion.div>
 
@@ -168,6 +216,9 @@ export default function LoginPage() {
                     type="password"
                     placeholder="••••••••"
                     icon={<Lock className="h-5 w-5" />}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </motion.div>
 
@@ -185,13 +236,16 @@ export default function LoginPage() {
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="pt-2">
-                  <button className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-brand-primary to-[#2C9BB5] py-4 text-sm font-bold text-brand-bg transition-all duration-300 hover:shadow-[0_0_20px_rgba(73,198,229,0.4)] active:scale-[0.98]">
+                  <button 
+                    disabled={isLoading}
+                    className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-brand-primary to-[#2C9BB5] py-4 text-sm font-bold text-brand-bg transition-all duration-300 hover:shadow-[0_0_20px_rgba(73,198,229,0.4)] active:scale-[0.98] disabled:opacity-50"
+                  >
                     <span className="relative z-10 flex items-center gap-2">
-                      Sign In
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      {isLoading ? "Signing In..." : "Sign In"}
+                      {!isLoading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
                     </span>
                     {/* Hover glare effect */}
-                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-500 ease-in-out group-hover:translate-x-full" />
+                    {!isLoading && <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-500 ease-in-out group-hover:translate-x-full" />}
                   </button>
                 </motion.div>
               </form>
@@ -236,7 +290,7 @@ export default function LoginPage() {
 
               <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-white/50">
                 Don't have an account?{" "}
-                <Link href="#" className="font-semibold text-brand-primary hover:text-brand-primary/80 transition-colors hover:underline underline-offset-4">
+                <Link href="/register" className="font-semibold text-brand-primary hover:text-brand-primary/80 transition-colors hover:underline underline-offset-4">
                   Create a loop
                 </Link>
               </motion.p>
