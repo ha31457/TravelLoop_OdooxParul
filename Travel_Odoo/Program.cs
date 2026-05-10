@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Travel_Odoo.Backend.Data;
-using Travel_Odoo.Backend.Models;
+using Travel_Odoo.Data;
+using Travel_Odoo.Models;
+using Travel_Odoo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,9 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
     {
+        options.SignIn.RequireConfirmedEmail = true;
         // Password rules
         options.Password.RequiredLength = 8;
         options.Password.RequireDigit = true;
@@ -55,6 +56,9 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero   // tokens expire exactly on time, no 5-min grace
         };
     });
+
+
+builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration
     .GetSection("AllowedOrigins")

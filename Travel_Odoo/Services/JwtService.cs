@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using Travel_Odoo.Backend.Models;
+using Travel_Odoo.Models;
 
-namespace Travel_Odoo.Backend.Services;
+namespace Travel_Odoo.Services;
 
 public class JwtService(IConfiguration config, UserManager<User> userManager) {
     public async Task<string> GenerateToken(User user)
