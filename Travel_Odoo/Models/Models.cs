@@ -62,7 +62,7 @@ namespace Travel_Odoo.Models
         public decimal? TotalBudget { get; set; }
 
         [MaxLength(3)]
-        public string CurrencyCode { get; set; } = "USD";
+        public string CurrencyCode { get; set; } = "INR";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
@@ -311,7 +311,7 @@ namespace Travel_Odoo.Models
         public decimal Amount { get; set; }
 
         [MaxLength(3)]
-        public string CurrencyCode { get; set; } = "USD";
+        public string CurrencyCode { get; set; } = "INR";
 
         public DateOnly? ExpenseDate { get; set; }
 
