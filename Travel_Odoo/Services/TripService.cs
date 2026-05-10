@@ -6,7 +6,7 @@ using Travel_Odoo.Services.Interfaces;
 
 namespace Travel_Odoo.Services;
 
-public class TripService(ApplicationDbContext db) : ITripService {
+public class TripService(ApplicationDbContext db, AiService aiService) : ITripService {
     public async Task<ApiResponseDto<TripDetailDto>> CreateTripAsync(Guid userId, CreateTripRequestDto dto)
         {
             if (dto.EndDate < dto.StartDate)
@@ -28,16 +28,16 @@ public class TripService(ApplicationDbContext db) : ITripService {
 
             db.Trips.Add(trip);
             await db.SaveChangesAsync();
-
+            _ = Task.Run(() => aiService.SuggestItineraryAsync(trip));
             return ApiResponseDto<TripDetailDto>.Ok(MapToDetail(trip));
         }
 
         public async Task<ApiResponseDto<TripDetailDto>> GetTripByIdAsync(Guid userId, Guid tripId)
         {
             var trip = await LoadFullTripAsync(tripId);
-
             if (trip == null || trip.UserId != userId)
                 return ApiResponseDto<TripDetailDto>.Fail("Trip not found.");
+            await aiService.SummarizeNotesAsync(trip);
 
             var budget = await BuildBudgetSummaryAsync(trip);
             var detail = MapToDetail(trip);
@@ -107,19 +107,24 @@ public class TripService(ApplicationDbContext db) : ITripService {
             return ApiResponseDto<string>.Ok("Trip deleted successfully.");
         }
 
-        public async Task<ApiResponseDto<string>> PublishTripAsync(Guid userId, Guid tripId)
+        public async Task<ApiResponseDto<TripPublishResultDto>> PublishTripAsync(Guid userId, Guid tripId)
         {
             var trip = await db.Trips.FirstOrDefaultAsync(t => t.Id == tripId && t.UserId == userId);
             if (trip == null)
-                return ApiResponseDto<string>.Fail("Trip not found.");
+                return ApiResponseDto<TripPublishResultDto>.Fail("Trip not found.");
 
             trip.IsPublic   = true;
             trip.PublicSlug = trip.PublicSlug ?? GenerateSlug(trip.Name);
             trip.UpdatedAt  = DateTime.UtcNow;
 
             await db.SaveChangesAsync();
-
-            return ApiResponseDto<string>.Ok(trip.PublicSlug);
+            await aiService.EstimateBudgetAsync(trip);
+            var packingList = await aiService.SuggestPackingListAsync(trip);
+            return ApiResponseDto<TripPublishResultDto>.Ok(new TripPublishResultDto
+            {
+                PublicSlug  = trip.PublicSlug,
+                PackingList = packingList
+            });
         }
 
         public async Task<ApiResponseDto<PublicTripDto>> GetPublicTripAsync(string slug)
@@ -321,6 +326,7 @@ public class TripService(ApplicationDbContext db) : ITripService {
             Content    = n.Content,
             NoteDate   = n.NoteDate,
             CreatedAt  = n.CreatedAt,
-            UpdatedAt  = n.UpdatedAt
+            UpdatedAt  = n.UpdatedAt,
+            Tag = n.Tag
         };
     }

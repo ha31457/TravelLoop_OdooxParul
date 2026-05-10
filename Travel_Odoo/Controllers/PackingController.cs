@@ -48,4 +48,10 @@ public class PackingController(PackingService packingService) : ControllerBase
         var result = await packingService.ResetChecklistAsync(UserId, tripId);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+    [HttpPost("ai-save")]
+    public async Task<IActionResult> SaveAiPackingList(Guid tripId, [FromBody] SavePackingListRequestDto dto)
+    {
+        var result = await packingService.SaveAiPackingListAsync(UserId, tripId, dto);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
 }

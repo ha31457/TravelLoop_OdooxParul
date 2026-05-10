@@ -52,7 +52,30 @@ public class PackingService(ApplicationDbContext db) : IPackingService {
 
             return ApiResponseDto<PackingItemDto>.Ok(MapItem(item));
         }
+            
+        public async Task<ApiResponseDto<PackingChecklistDto>> SaveAiPackingListAsync(
+            Guid userId, Guid tripId, SavePackingListRequestDto dto)
+        {
+            if (!await TripBelongsToUserAsync(tripId, userId))
+                return ApiResponseDto<PackingChecklistDto>.Fail("Trip not found.");
 
+            foreach (var item in dto.Items)
+            {
+                if (!Enum.TryParse<PackingCategory>(item.Category, true, out var category))
+                    category = PackingCategory.Other;
+
+                db.PackingItems.Add(new PackingItem
+                {
+                    TripId   = tripId,
+                    Name     = item.Name,
+                    Category = category
+                });
+            }
+
+            await db.SaveChangesAsync();
+            return await GetChecklistAsync(userId, tripId);
+        }
+        
         public async Task<ApiResponseDto<PackingItemDto>> UpdateItemAsync(
             Guid userId, Guid tripId, Guid itemId, UpdatePackingItemRequestDto dto)
         {

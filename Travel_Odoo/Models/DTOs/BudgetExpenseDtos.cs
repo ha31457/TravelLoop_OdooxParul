@@ -13,6 +13,7 @@ public class BudgetExpenseDto
     public string CurrencyCode { get; set; } = null!;
     public DateOnly? ExpenseDate { get; set; }
     public bool IsEstimate { get; set; }
+    public bool IsAiGenerated { get; set; }
 }
 
 public class CreateExpenseRequestDto

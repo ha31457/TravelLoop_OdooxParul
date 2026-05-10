@@ -104,6 +104,7 @@ public class NoteService(ApplicationDbContext db) : INoteService {
             Content    = n.Content,
             NoteDate   = n.NoteDate,
             CreatedAt  = n.CreatedAt,
-            UpdatedAt  = n.UpdatedAt
+            UpdatedAt  = n.UpdatedAt,
+            Tag = n.Tag
         };
     }

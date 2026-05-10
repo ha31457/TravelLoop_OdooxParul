@@ -7,6 +7,7 @@ using Travel_Odoo.Data;
 using Travel_Odoo.Models;
 using Travel_Odoo.Services;
 using Travel_Odoo.Services.Interfaces;
+using Travel_Odoo.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
     {
-        options.SignIn.RequireConfirmedEmail = true;
+        options.SignIn.RequireConfirmedEmail = false;
         // Password rules
         options.Password.RequiredLength = 8;
         options.Password.RequireDigit = true;
@@ -58,17 +59,21 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+builder.Services.Configure<GeminiSettings>(
+    builder.Configuration.GetSection("GeminiSettings"));
 
+builder.Services.AddHttpClient<AiService>();
+builder.Services.AddScoped<AiService>();
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<IUserService,     UserService>();
-builder.Services.AddScoped<ILocationService, LocationService>();
-builder.Services.AddScoped<IActivityService, ActivityService>();
-builder.Services.AddScoped<ITripService,     TripService>();
-builder.Services.AddScoped<ITripStopService, TripStopService>();
-builder.Services.AddScoped<IBudgetService,   BudgetService>();
-builder.Services.AddScoped<IPackingService,  PackingService>();
-builder.Services.AddScoped<INoteService,     NoteService>();
-builder.Services.AddScoped<ISharingService,  SharingService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<LocationService>();
+builder.Services.AddScoped<ActivityService>();
+builder.Services.AddScoped<TripService>();
+builder.Services.AddScoped<TripStopService>();
+builder.Services.AddScoped<BudgetService>();
+builder.Services.AddScoped<PackingService>();
+builder.Services.AddScoped<NoteService>();
+builder.Services.AddScoped<SharingService>();
 
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration
@@ -93,5 +98,22 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        // await context.Database.MigrateAsync(); // Uncomment if using Migrations
+        await DbSeeder.SeedAsync(context, userManager);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
 
 app.Run();

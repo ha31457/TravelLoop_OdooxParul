@@ -41,7 +41,7 @@ namespace Travel_Odoo.Services.Interfaces;
         Task<ApiResponseDto<PagedResultDto<TripSummaryDto>>> GetUserTripsAsync(Guid userId, int page, int pageSize);
         Task<ApiResponseDto<TripDetailDto>> UpdateTripAsync(Guid userId, Guid tripId, UpdateTripRequestDto dto);
         Task<ApiResponseDto<string>> DeleteTripAsync(Guid userId, Guid tripId);
-        Task<ApiResponseDto<string>> PublishTripAsync(Guid userId, Guid tripId);
+        Task<ApiResponseDto<TripPublishResultDto>> PublishTripAsync(Guid userId, Guid tripId);
         Task<ApiResponseDto<PublicTripDto>> GetPublicTripAsync(string slug);
         Task<ApiResponseDto<TripDetailDto>> CopyTripAsync(Guid userId, string slug);
     }

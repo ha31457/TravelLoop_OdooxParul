@@ -6,7 +6,7 @@ using Travel_Odoo.Services.Interfaces;
 
 namespace Travel_Odoo.Services;
 
-public class TripStopService(ApplicationDbContext db) : ITripStopService {
+public class TripStopService(ApplicationDbContext db, AiService aiService) : ITripStopService {
     public async Task<ApiResponseDto<TripStopDto>> AddStopAsync(
             Guid userId, Guid tripId, CreateTripStopRequestDto dto)
         {
@@ -39,7 +39,7 @@ public class TripStopService(ApplicationDbContext db) : ITripStopService {
 
             db.TripStops.Add(stop);
             await db.SaveChangesAsync();
-
+            _ = Task.Run(() => aiService.SuggestActivitiesAsync(stop, city));
             stop.City = city;
             stop.StopActivities = new List<StopActivity>();
 

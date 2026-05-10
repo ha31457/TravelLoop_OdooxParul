@@ -149,6 +149,7 @@ public class BudgetService(ApplicationDbContext db) : IBudgetService {
             Amount       = e.Amount,
             CurrencyCode = e.CurrencyCode,
             ExpenseDate  = e.ExpenseDate,
-            IsEstimate   = e.IsEstimate
+            IsEstimate   = e.IsEstimate,
+            IsAiGenerated = e.IsAiGenerated
         };
     }

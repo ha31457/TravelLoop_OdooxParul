@@ -54,6 +54,7 @@ namespace Travel_Odoo.Models
 
         public TripStatus Status { get; set; } = TripStatus.Draft;
         public bool IsPublic { get; set; } = false;
+        public bool HasAiSummary { get; set; } = false;
 
         [MaxLength(128)]
         public string? PublicSlug { get; set; }   // used for public/shared URL
@@ -112,6 +113,7 @@ namespace Travel_Odoo.Models
         public int? CostIndex { get; set; }
 
         public int PopularityScore { get; set; } = 0;
+        public bool IsAiGenerated { get; set; }
 
         [MaxLength(500)]
         public string? ThumbnailUrl { get; set; }
@@ -177,6 +179,7 @@ namespace Travel_Odoo.Models
 
         [ForeignKey(nameof(CityId))]
         public City City { get; set; } = null!;
+        public bool IsAiGenerated { get; set; } = false;
 
         public ICollection<StopActivity> StopActivities { get; set; } = new List<StopActivity>();
         public ICollection<TripNote> Notes_ { get; set; } = new List<TripNote>();
@@ -211,6 +214,7 @@ namespace Travel_Odoo.Models
         public string? ThumbnailUrl { get; set; }
 
         public int PopularityScore { get; set; } = 0;
+        public bool IsAiGenerated { get; set; } = false;
 
         // Navigation
         [ForeignKey(nameof(CityId))]
@@ -277,6 +281,7 @@ namespace Travel_Odoo.Models
         public decimal? ActualCost { get; set; }    // overrides catalogue estimate
 
         public bool IsCompleted { get; set; } = false;
+        public bool IsAiGenerated { get; set; }
 
         [MaxLength(500)]
         public string? Notes { get; set; }
@@ -309,6 +314,8 @@ namespace Travel_Odoo.Models
 
         [Required, Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
+        
+        public bool IsAiGenerated { get; set; } = false;
 
         [MaxLength(3)]
         public string CurrencyCode { get; set; } = "INR";
@@ -395,6 +402,7 @@ namespace Travel_Odoo.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        public string? Tag { get; set; }
 
         // Navigation
         [ForeignKey(nameof(TripId))]
