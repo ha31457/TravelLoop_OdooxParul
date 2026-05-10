@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
+  
+  --color-brand-bg: #071120;
+  --color-brand-surface: #0E2238;
+  --color-brand-primary: #49C6E5;
+  --color-brand-secondary: #FF8A3D;
+  --color-brand-highlight: #FF6B6B;
+  --color-brand-text: #F7FAFC;
+
+  /* Custom utility classes equivalent for tailwind v4 */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px #49C6E5, 0 0 20px #49C6E5; }
+  to { box-shadow: 0 0 20px #FF8A3D, 0 0 30px #FF8A3D; }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-bg);
+    color: var(--color-brand-text);
+  }
+}
