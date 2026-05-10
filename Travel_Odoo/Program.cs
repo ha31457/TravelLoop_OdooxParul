@@ -92,11 +92,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment()) {
     app.MapOpenApi();
 }
+// Remove or comment this out:
+// app.UseHttpsRedirection();
 
-app.UseHttpsRedirection();
+// Replace with:
+if (app.Environment.IsProduction())
+    app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseCors();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
